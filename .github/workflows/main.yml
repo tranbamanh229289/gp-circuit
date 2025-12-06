@@ -1,0 +1,31 @@
+name: Tests
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: modules-cache
+      uses: actions/cache@v3
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Setup other deps
+      run: sudo apt-get update && sudo apt-get install -y wget nlohmann-json3-dev libgmp-dev nasm g++ build-essential
+
+    - name: Setup Circom
+      run: wget https://github.com/iden3/circom/releases/latest/download/circom-linux-amd64 && sudo mv ./circom-linux-amd64 /usr/bin/circom && sudo chmod +x /usr/bin/circom
+
+    - name: Generate testvectors
+      run: cd testvectorgen && go test ./...
+
+    - name: Install node_modules
+      if: steps.modules-cache.outputs.cache-hit != 'true'
+      run: npm install
+    - name: Test circom circuits
+      run: npm run test
