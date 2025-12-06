@@ -18,44 +18,48 @@ template credentialAtomicQueryV3OffChain(issuerLevels, claimLevels, maxValueArra
     signal output {binary} merklized;
     signal output userID;
 
-    // Issuer State to be checked outside of the circuit
-    // in case of MTP proof issuerState = issuerClaimIdenState
-    // in case of Sig proof issuerState = issuerAuthState
-    signal output issuerState;
-
-    // Private random nonce, used to generate LinkID
-    signal input linkNonce;
-    signal output linkID;
-
-    // nullifier input & output signals
-    signal input nullifierSessionID;
-    signal output nullifier;
-
-    // Modifier/Computation Operator output ($sd)
-    signal output operatorOutput;
-
     // common inputs for Sig and MTP
     signal input proofType;  // sig 1, mtp 2
     signal input requestID;
     signal input userGenesisID;
     signal input profileNonce;
-    signal input claimSubjectProfileNonce; // nonce of the profile that claim is issued to, 0 if claim is issued to
+    signal input claimSubjectProfileNonce; // nonce of the profile that claim is issued to, 0 if claim is issued to genesisID
+
     signal input issuerID;
-    signal input verifierID;
+    signal input isRevocationChecked;
+    signal input issuerClaimNonRevMtp[issuerLevels];
+    signal input issuerClaimNonRevMtpNoAux;
+    signal input issuerClaimNonRevMtpAuxHi;
+    signal input issuerClaimNonRevMtpAuxHv;
+    signal input issuerClaimNonRevClaimsTreeRoot;
+    signal input issuerClaimNonRevRevTreeRoot;
+    signal input issuerClaimNonRevRootsTreeRoot;
+    signal input issuerClaimNonRevState;
+
+    /* current time */
     signal input timestamp;
 
-    // MTP specific
+    /** Query */
+    signal input claimSchema;
+
+    signal input claimPathMtp[claimLevels];
+    signal input claimPathMtpNoAux; // 1 if aux node is empty, 0 if non-empty or for inclusion proofs
+    signal input claimPathMtpAuxHi; // 0 for inclusion proof
+    signal input claimPathMtpAuxHv; // 0 for inclusion proof
+    signal input claimPathKey; // hash of path in merklized json-ld document
+    signal input claimPathValue; // value in this path in merklized json-ld document
+    signal input slotIndex;
+    signal input operator;
+    signal input value[maxValueArraySize];
+    signal input valueArraySize;
     signal input issuerClaim[8];
+
+    // MTP specific
     signal input issuerClaimMtp[issuerLevels];
     signal input issuerClaimClaimsTreeRoot;
     signal input issuerClaimRevTreeRoot;
     signal input issuerClaimRootsTreeRoot;
     signal input issuerClaimIdenState;
-    signal input issuerClaimNonRevMtp[issuerLevels];
-    signal input issuerClaimNonRevMtpNoAux;
-    signal input issuerClaimNonRevMtpAuxHi;
-    signal input issuerClaimNonRevMtpAuxHv;
-    signal input isRevocationChecked;
 
     // Sig specific
     signal input issuerAuthClaim[8];
@@ -72,24 +76,24 @@ template credentialAtomicQueryV3OffChain(issuerLevels, claimLevels, maxValueArra
     signal input issuerClaimSignatureR8y;
     signal input issuerClaimSignatureS;
 
-    signal input issuerClaimNonRevClaimsTreeRoot;
-    signal input issuerClaimNonRevRevTreeRoot;
-    signal input issuerClaimNonRevRootsTreeRoot;
-    signal input issuerClaimNonRevState;
+    // Issuer State to be checked outside of the circuit
+    // in case of MTP proof issuerState = issuerClaimIdenState
+    // in case of Sig proof issuerState = issuerAuthState
+    signal output issuerState;
 
-    /** Query */
-    signal input claimSchema;
-    signal input slotIndex;
-    signal input operator;
-    signal input value[maxValueArraySize];
-    signal input valueArraySize;
+    // Private random nonce, used to generate LinkID
+    signal input linkNonce;
+    signal output linkID;
 
-    signal input claimPathMtp[claimLevels];
-    signal input claimPathMtpNoAux; // 1 if aux node is empty, 0 if non-empty or for inclusion proofs
-    signal input claimPathMtpAuxHi; // 0 for inclusion proof
-    signal input claimPathMtpAuxHv; // 0 for inclusion proof
-    signal input claimPathKey; // hash of path in merklized json-ld document
-    signal input claimPathValue; // value in this path in merklized json-ld document
+    // Identifier of the verifier
+    signal input verifierID;
+
+    // nullifier input & output signals
+    signal input nullifierSessionID;
+    signal output nullifier;
+
+    // Modifier/Computation Operator output ($sd)
+    signal output operatorOutput;
 
     // get safe one values to be used in ForceEqualIfEnabled
     signal {binary} one <== SafeOne()(userGenesisID);
